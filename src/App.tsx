@@ -11,15 +11,15 @@ function App() {
       }) as GPUAdapter;
       const device = await adapter.requestDevice()
       const context = canvas.getContext('webgpu') as GPUCanvasContext
-      const format = navigator.gpu.getPreferredCanvasFormat()
+      const format = navigator.gpu.getPreferredCanvasFormat(); // rgba8unorm or bgra8unorm
       const devicePixelRatio = window.devicePixelRatio || 1
       canvas.width = canvas.clientWidth * devicePixelRatio
       canvas.height = canvas.clientHeight * devicePixelRatio
       // const size = { width: canvas.width, height: canvas.height }
       context.configure({
         device, 
-        format, // json specific format when key and value are the same
-        alphaMode: 'opaque' // prevent chrome warning
+        format,
+        alphaMode: 'opaque',
       })
 
       triangleScript(device, context, format);
