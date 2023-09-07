@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import './App.css';
 import { triangleScript } from './demos/triangle';
+import { computeScript } from './demos/simpleCompute';
 
 function App() {
   useEffect(() => {
@@ -23,6 +24,7 @@ function App() {
       })
 
       triangleScript(device, context, format);
+      computeScript(device);
     })()
 
   }, [])
