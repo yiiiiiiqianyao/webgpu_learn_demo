@@ -1,6 +1,6 @@
 # Getting Started with Create React App
 
-做一些简单的学习记录
+做一些简单的学习记录 https://webgpufundamentals.org/webgpu/
 
 ### demos
 
