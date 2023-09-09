@@ -1,21 +1,5 @@
-const triangleVert = `
-@vertex
-fn main(@builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4<f32> {
-    var pos = array<vec2<f32>, 3>(
-	    vec2<f32>(0.0, 0.5),
-	    vec2<f32>(-0.5, -0.5),
-	    vec2<f32>(0.5, -0.5)
-    );
-    return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
-}
-`
-const redFrag = `
-@fragment
-fn main() -> @location(0) vec4<f32> {
-    // vec4f at location(0) => means it will write to the first render target
-    return vec4<f32>(1.0, 0.0, 0.0, 1.0);
-}`
-
+// import { vert, frag } from './shaders/triangle'; // 纯色
+import { vert, frag } from './shaders/colorTriangle'; // 渐变色 - varying 传值
 
  // create a simple pipiline
 async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promise<GPURenderPipeline> {
@@ -25,7 +9,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promis
         vertex: {
             module: device.createShaderModule({
                 label: 'triangle vertex shader',
-                code: triangleVert
+                code: vert
             }),
             entryPoint: 'main'
         },
@@ -36,7 +20,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promis
         fragment: {
             module: device.createShaderModule({
                 label: 'triangle fragment shader',
-                code: redFrag
+                code: frag
             }),
             entryPoint: 'main',
             targets: [ // 定义了一系列的 render target
