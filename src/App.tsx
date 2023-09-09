@@ -23,8 +23,27 @@ function App() {
         alphaMode: 'opaque',
       })
 
-      triangleScript(device, context, format);
-      computeScript(device);
+      function render() {
+        triangleScript(device, context, format);
+        computeScript(device);
+      }
+      // render();
+      
+      // re-configure context on resize
+      const resizeObserver = new ResizeObserver(entries => {
+        for (const entry of entries) {
+          const canvas = entry.target as HTMLCanvasElement;
+          const width = entry.contentBoxSize[0].inlineSize;
+          const height = entry.contentBoxSize[0].blockSize;
+          canvas.width = Math.max(1, Math.min(width, device.limits.maxTextureDimension2D));
+          canvas.height = Math.max(1, Math.min(height, device.limits.maxTextureDimension2D));
+          // re-render
+          // don't need to recall context.configure() after v104
+          render();
+        }
+      });
+      resizeObserver.observe(canvas);
+      // resizeObserver.unobserve(需要监听的dom);
     })()
 
   }, [])
