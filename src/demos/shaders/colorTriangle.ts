@@ -28,8 +28,16 @@ struct VertexShaderInput {
     @builtin(position) position: vec4f,
     @location(0) color: vec4f,
 };
+
 @fragment
 fn main(fsInput: VertexShaderInput) -> @location(0) vec4f {
     // vec4f at location(0) => means it will write to the first render target
     return fsInput.color;
 }`
+
+// Inter-stage variables connect by location
+// export const frag = `
+// @fragment
+// fn main(@location(0) color: vec4f) -> @location(0) vec4f {
+//     return color;
+// }`
