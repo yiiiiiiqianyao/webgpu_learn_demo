@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import './App.css';
-import { triangleScript } from './demos/triangle';
+// import { triangleScript } from './demos/triangle';
+import { triangleScript } from './demos/uniformTriangle';
 // import { computeScript } from './demos/simpleCompute';
 
 function App() {
