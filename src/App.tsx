@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import './App.css';
 // import { triangleScript } from './demos/triangle';
-import { triangleScript } from './demos/uniformTriangle';
+// import { triangleScript } from './demos/uniformTriangle';
 // import { computeScript } from './demos/simpleCompute';
+import { storageBufferScript } from './demos/storageBuffer';
 
 function App() {
   useEffect(() => {
@@ -25,7 +26,7 @@ function App() {
       })
 
       function render() {
-        triangleScript(device, context, format);
+        storageBufferScript(device, context, format, canvas);
         // computeScript(device);
       }
       // render();

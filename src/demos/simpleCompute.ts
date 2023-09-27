@@ -28,6 +28,7 @@ export async function computeScript (device: GPUDevice) {
     const workBuffer = device.createBuffer({
         label: 'work buffer',
         size: input.byteLength,
+        // STORAGE Buffer can be read & write
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
     
@@ -69,6 +70,7 @@ export async function computeScript (device: GPUDevice) {
     console.log('mapAsync');
     // Read the results
     const result = new Float32Array(resultBuffer.getMappedRange().slice(0));
+    // 解绑
     resultBuffer.unmap();
     console.log(result);
   }
