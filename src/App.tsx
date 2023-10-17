@@ -3,7 +3,8 @@ import './App.css';
 // import { triangleScript } from './demos/triangle';
 // import { triangleScript } from './demos/uniformTriangle';
 // import { computeScript } from './demos/simpleCompute';
-import { storageBufferScript } from './demos/storageBuffer';
+// import { storageBufferScript } from './demos/storageBuffer';
+import { vertexBufferScript } from './demos/vertexBuffer';
 
 function App() {
   useEffect(() => {
@@ -26,7 +27,8 @@ function App() {
       })
 
       function render() {
-        storageBufferScript(device, context, format, canvas);
+        vertexBufferScript(device, context, format, canvas);
+        // storageBufferScript(device, context, format, canvas);
         // computeScript(device);
       }
       // render();
