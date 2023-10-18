@@ -4,7 +4,8 @@ import './App.css';
 // import { triangleScript } from './demos/uniformTriangle';
 // import { computeScript } from './demos/simpleCompute';
 // import { storageBufferScript } from './demos/storageBuffer';
-import { vertexBufferScript } from './demos/vertexBuffer';
+// import { vertexBufferScript } from './demos/vertexBuffer';
+import { textureScript } from './demos/texture';
 
 function App() {
   useEffect(() => {
@@ -27,9 +28,10 @@ function App() {
       })
 
       function render() {
-        vertexBufferScript(device, context, format, canvas);
+        // vertexBufferScript(device, context, format, canvas);
         // storageBufferScript(device, context, format, canvas);
         // computeScript(device);
+        textureScript(device, context, format);
       }
       // render();
       
