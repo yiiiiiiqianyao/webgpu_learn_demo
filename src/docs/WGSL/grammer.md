@@ -9,3 +9,10 @@ int n = isTrue ? 1 : 0;
 // WGSL
 let n: i32 = select(0, 1, isTrue);
 ```
+
+编辑着色器
+```js
+const shaderModule = device.createShaderModule({
+    code: shaderSrc
+})
+```

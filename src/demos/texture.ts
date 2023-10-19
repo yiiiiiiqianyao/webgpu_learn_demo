@@ -83,18 +83,17 @@ export async function initImgTexture(device: GPUDevice) {
     const imgUrl = 'https://mdn.alipayobjects.com/huamei_uu41p1/afts/img/A*Eq-fQ5jQPYQAAAAAAAAAAAAADhyWAQ/original';
     const source = await loadImageBitmap(imgUrl);
     const texture = device.createTexture({
-    label: imgUrl,
-    format: 'rgba8unorm',
-    size: [source.width, source.height],
-    usage: GPUTextureUsage.TEXTURE_BINDING |
-            GPUTextureUsage.COPY_DST |
-            GPUTextureUsage.RENDER_ATTACHMENT,
+        label: imgUrl,
+        format: 'rgba8unorm',
+        size: [source.width, source.height],
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
     });
+    // Note: copyExternalImageToTexture
+    // 在使用 copyExternalImageToTexture 往 texture 中写入数据的时候 需要设置 texture 的 usage 为 GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
     device.queue.copyExternalImageToTexture(
     { source, flipY: true },
     { texture },
-    { width: source.width, height: source.height },
-    );
+    { width: source.width, height: source.height });
     return texture;
 }
 
@@ -124,7 +123,10 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promis
                     format: format // render target format has to specify
                 }
             ]
-        }
+        },
+        // multisample: {
+        //     count: 1, // 1 or 4
+        // }
     }
 
     // const texture = initRawTexture(device);
