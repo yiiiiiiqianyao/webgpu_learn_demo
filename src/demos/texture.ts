@@ -97,6 +97,38 @@ export async function initImgTexture(device: GPUDevice) {
     return texture;
 }
 
+export function initCanvasTexture(device: GPUDevice) {
+    const size = 256;
+    const half = size / 2;
+    const ctx = document.createElement('canvas').getContext('2d') as CanvasRenderingContext2D;
+    ctx.canvas.width = size;
+    ctx.canvas.height = size;
+    ctx.clearRect(0, 0, size, size);
+    ctx.translate(half, half);
+    const num = 20;
+    const time = 0.1;
+    const hsl = (h: number, s: number, l: number) => `hsl(${h * 360 | 0}, ${s * 100}%, ${l * 100 | 0}%)`;
+    for (let i = 0; i < num; ++i) {
+      ctx.fillStyle = hsl(i / num * 0.2 + time * 0.1, 1, i % 2 * 0.5);
+      ctx.fillRect(-half, -half, size, size);
+      ctx.rotate(time * 0.5);
+      ctx.scale(0.85, 0.85);
+      ctx.translate(size / 16, 0);
+    }
+    const source = ctx.canvas;
+    const texture = device.createTexture({
+        format: 'rgba8unorm',
+        // mipLevelCount: options.mips ? numMipLevels(source.width, source.height) : 1,
+        size: [source.width, source.height],
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+    device.queue.copyExternalImageToTexture(
+        { source, flipY: true, },
+        { texture },
+        { width: source.width, height: source.height });
+    return texture;
+}
+
 // create a simple pipiline
 async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promise<{
     pipeline: GPURenderPipeline, bindGroup: GPUBindGroup}> {
@@ -130,7 +162,8 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promis
     }
 
     // const texture = initRawTexture(device);
-    const texture = await initImgTexture(device);
+    // const texture = await initImgTexture(device);
+    const texture = await initCanvasTexture(device);
 
     // 纹理采样器
     const sampler = device.createSampler({
