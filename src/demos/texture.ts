@@ -97,17 +97,22 @@ export async function initImgTexture(device: GPUDevice) {
     return texture;
 }
 
-export function initCanvasTexture(device: GPUDevice) {
+const size = 256;
+const ctx = document.createElement('canvas').getContext('2d') as CanvasRenderingContext2D;
+ctx.canvas.width = size;
+ctx.canvas.height = size;
+const canvasSource = ctx.canvas;
+let canvasTime = 0.1;
+function updateCanvasTexture() {
     const size = 256;
     const half = size / 2;
-    const ctx = document.createElement('canvas').getContext('2d') as CanvasRenderingContext2D;
-    ctx.canvas.width = size;
-    ctx.canvas.height = size;
+    const num = 20;
+    canvasTime += 0.001;
+    const time = canvasTime;
+    const hsl = (h: number, s: number, l: number) => `hsl(${h * 360 | 0}, ${s * 100}%, ${l * 100 | 0}%)`;
+    ctx.save();
     ctx.clearRect(0, 0, size, size);
     ctx.translate(half, half);
-    const num = 20;
-    const time = 0.1;
-    const hsl = (h: number, s: number, l: number) => `hsl(${h * 360 | 0}, ${s * 100}%, ${l * 100 | 0}%)`;
     for (let i = 0; i < num; ++i) {
       ctx.fillStyle = hsl(i / num * 0.2 + time * 0.1, 1, i % 2 * 0.5);
       ctx.fillRect(-half, -half, size, size);
@@ -115,23 +120,26 @@ export function initCanvasTexture(device: GPUDevice) {
       ctx.scale(0.85, 0.85);
       ctx.translate(size / 16, 0);
     }
-    const source = ctx.canvas;
+    ctx.restore();
+}
+
+export function initCanvasTexture(device: GPUDevice) {
+    updateCanvasTexture();
     const texture = device.createTexture({
         format: 'rgba8unorm',
         // mipLevelCount: options.mips ? numMipLevels(source.width, source.height) : 1,
-        size: [source.width, source.height],
+        size: [canvasSource.width, canvasSource.height],
         usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
     });
     device.queue.copyExternalImageToTexture(
-        { source, flipY: true, },
+        { source: canvasSource, flipY: true, },
         { texture },
-        { width: source.width, height: source.height });
+        { width: canvasSource.width, height: canvasSource.height });
     return texture;
 }
 
 // create a simple pipiline
-async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promise<{
-    pipeline: GPURenderPipeline, bindGroup: GPUBindGroup}> {
+async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promise<GPURenderPipeline> {
     const module = device.createShaderModule({
         label: 'our hardcoded textured quad shaders',
         code,
@@ -160,60 +168,72 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promis
         //     count: 1, // 1 or 4
         // }
     }
+    const pipeline = await device.createRenderPipelineAsync(descriptor);
+    return pipeline;
+}
 
+export async function textureScript (device: GPUDevice, context: GPUCanvasContext, format: GPUTextureFormat) {
+    const pipeline = await initPipeline(device, format);
+
+    
+     // 纹理采样器
+     const sampler = device.createSampler({
+        // addressModeU: 'repeat',
+        // addressModeU: 'clamp-to-edge',
+        // addressModeV: 'repeat',
+        // addressModeV: 'clamp-to-edge',
+        // magFilter: 'nearest',  // filter 选取最近的 pixel
+        magFilter: 'linear', // filter 线性插值
+        // minFilter
+        // mipmapFilter
+    });
     // const texture = initRawTexture(device);
     // const texture = await initImgTexture(device);
     const texture = await initCanvasTexture(device);
 
-    // 纹理采样器
-    const sampler = device.createSampler({
-    // addressModeU: 'repeat',
-    // addressModeU: 'clamp-to-edge',
-    // addressModeV: 'repeat',
-    // addressModeV: 'clamp-to-edge',
-    // magFilter: 'nearest',  // filter 选取最近的 pixel
-    magFilter: 'linear', // filter 线性插值
-    // minFilter
-    // mipmapFilter
-    });
-    const pipeline = await device.createRenderPipelineAsync(descriptor);
-    
-      const bindGroup = device.createBindGroup({
+    const bindGroup = device.createBindGroup({
         layout: pipeline.getBindGroupLayout(0),
         entries: [
           { binding: 0, resource: sampler },
           { binding: 1, resource: texture.createView() },
         ],
-      });
-  
-    
-    return {pipeline, bindGroup};
-}
-
-export async function textureScript (device: GPUDevice, context: GPUCanvasContext, format: GPUTextureFormat) {
-    const { pipeline, bindGroup } = await initPipeline(device, format);
-
-    const view: GPUTextureView = context.getCurrentTexture().createView();
-    const renderPassDescriptor: GPURenderPassDescriptor = {
-        label: 'our basic canvas renderPass',
-        colorAttachments: [
-            { // 在 fragment shader 中通过 location(0) 指定了这个输出的颜色附件
-                view: view,
-                clearValue: [0.3, 0.3, 0.3, 1],
-                loadOp: 'clear', // clear/load clear：to clear the texture to the clear value before drawing
-                storeOp: 'store' // store/discard
-            }
-        ]
-    };
-    const commandEncoder = device.createCommandEncoder({
-        label: 'render quad encoder',
     });
-    const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
-    passEncoder.setPipeline(pipeline);
-    passEncoder.setBindGroup(0, bindGroup);
-    passEncoder.draw(6);
-    passEncoder.end();
 
-    const commandBuffer = commandEncoder.finish();
-    device.queue.submit([commandBuffer]);
+    
+    const render = () => {
+        const view: GPUTextureView = context.getCurrentTexture().createView();
+        const renderPassDescriptor: GPURenderPassDescriptor = {
+            label: 'our basic canvas renderPass',
+            colorAttachments: [
+                { // 在 fragment shader 中通过 location(0) 指定了这个输出的颜色附件
+                    view: view,
+                    clearValue: [0.3, 0.3, 0.3, 1],
+                    loadOp: 'clear', // clear/load clear：to clear the texture to the clear value before drawing
+                    storeOp: 'store' // store/discard
+                }
+            ]
+        };
+        const commandEncoder = device.createCommandEncoder({
+            label: 'render quad encoder',
+        });
+        const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+        passEncoder.setPipeline(pipeline);
+        // update canvas/video
+        updateCanvasTexture();
+        device.queue.copyExternalImageToTexture(
+            { source: canvasSource, flipY: true, },
+            { texture },
+            { width: canvasSource.width, height: canvasSource.height }
+        );
+
+        passEncoder.setBindGroup(0, bindGroup);
+        passEncoder.draw(6);
+        passEncoder.end();
+    
+        const commandBuffer = commandEncoder.finish();
+        device.queue.submit([commandBuffer]);
+        requestAnimationFrame(render);
+    }
+    render();
+    
 }
