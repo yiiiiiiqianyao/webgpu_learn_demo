@@ -5,7 +5,8 @@ import './App.css';
 // import { computeScript } from './demos/simpleCompute';
 // import { storageBufferScript } from './demos/storageBuffer';
 // import { vertexBufferScript } from './demos/vertexBuffer';
-import { textureScript } from './demos/texture';
+// import { textureScript } from './demos/texture';
+import { videoScript } from './demos/video';
 
 function App() {
   useEffect(() => {
@@ -31,7 +32,8 @@ function App() {
         // vertexBufferScript(device, context, format, canvas);
         // storageBufferScript(device, context, format, canvas);
         // computeScript(device);
-        textureScript(device, context, format);
+        // textureScript(device, context, format);
+        videoScript(device, context, format);
       }
       // render();
       
