@@ -85,9 +85,8 @@ export async function videoScript (device: GPUDevice, context: GPUCanvasContext,
         magFilter: 'linear', // filter 线性插值
     });
     video.play();
-
-    setTimeout( async() => {
-        console.log('load');
+    // requestVideoFrameCallback canIuse 89% 2023/10/25
+    video.requestVideoFrameCallback(async () => {
         const render = () => {
             const videoFrame = new VideoFrame(video);
             videoFrame.close();
@@ -110,9 +109,10 @@ export async function videoScript (device: GPUDevice, context: GPUCanvasContext,
             const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
             passEncoder.setPipeline(pipeline);
 
+            // 可以考虑使用 requestVideoFrameCallback 获得视频实际的刷新帧率 优化视频的刷新
             const texture = device.importExternalTexture({
                 source: video,
-            })
+            });
             const bindGroup = device.createBindGroup({
                 layout: pipeline.getBindGroupLayout(0),
                 entries: [
@@ -130,6 +130,5 @@ export async function videoScript (device: GPUDevice, context: GPUCanvasContext,
             requestAnimationFrame(render);
         }
         render();
-    }, 1000)
-    
+    });
 }

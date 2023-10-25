@@ -106,9 +106,8 @@ export async function videoScript (device: GPUDevice, context: GPUCanvasContext,
         magFilter: 'linear', // filter 线性插值
     });
     video.play();
-
-    setTimeout( async() => {
-        console.log('load');
+    // requestVideoFrameCallback canIuse 89% 2023/10/25
+    video.requestVideoFrameCallback( async () => {
         const texture = await initVideoTexture(device);
         const render =  async() => {
             const view: GPUTextureView = context.getCurrentTexture().createView();
@@ -128,7 +127,7 @@ export async function videoScript (device: GPUDevice, context: GPUCanvasContext,
             });
             const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
             passEncoder.setPipeline(pipeline);
-
+    
             copySourceToTexture(device, texture, video);
             const bindGroup = device.createBindGroup({
                 layout: pipeline.getBindGroupLayout(0),
@@ -147,6 +146,5 @@ export async function videoScript (device: GPUDevice, context: GPUCanvasContext,
             requestAnimationFrame(render);
         }
         render();
-    }, 1000)
-    
+    });
 }
