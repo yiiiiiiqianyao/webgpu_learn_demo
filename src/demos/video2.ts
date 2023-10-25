@@ -27,15 +27,12 @@ struct v2f {
 }
 
 @group(0) @binding(0) var ourSampler: sampler;
-@group(0) @binding(1) var ourTexture: texture_external;
+@group(0) @binding(1) var ourTexture: texture_2d<f32>;
 
 @fragment fn fs(fsInput: v2f) -> @location(0) vec4f {
     // ourTexture 被采样的纹理
     // ourSampler 采样器
-    // fsInput.texCoord 采样坐标 FlipY
-    let uv = vec2f(fsInput.texCoord.x, 1.0 - fsInput.texCoord.y);
-    // let uv = fsInput.texCoord.xy;
-    return textureSampleBaseClampToEdge(ourTexture, ourSampler, uv);
+    return textureSample(ourTexture, ourSampler, fsInput.texCoord);
 }
 `
 
@@ -50,7 +47,8 @@ function copySourceToTexture(device: GPUDevice, texture: GPUTexture, source: HTM
     device.queue.copyExternalImageToTexture(
       { source, flipY: true, },
       { texture },
-      { width: video.videoWidth, height: video.videoHeight });
+      { width: source.videoWidth, height: source.videoHeight }
+    );
   }
 
 export function initVideoTexture(device: GPUDevice) {
@@ -97,28 +95,22 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promis
     const pipeline = await device.createRenderPipelineAsync(descriptor);
     return pipeline;
 }
-
+// Note: 将视频作为源，使用常规的纹理采样，渲染时每帧更新纹理
 export async function videoScript (device: GPUDevice, context: GPUCanvasContext, format: GPUTextureFormat) {
     const pipeline = await initPipeline(device, format);
     
      // 纹理采样器
      const sampler = device.createSampler({
-        // addressModeU: 'repeat',
-        // addressModeU: 'clamp-to-edge',
-        // addressModeV: 'repeat',
-        // addressModeV: 'clamp-to-edge',
-        // magFilter: 'nearest',  // filter 选取最近的 pixel
+        addressModeU: 'repeat',
+        addressModeV: 'repeat',
         magFilter: 'linear', // filter 线性插值
     });
     video.play();
 
     setTimeout( async() => {
         console.log('load');
-        // const texture = await initVideoTexture(device);
-        const render = () => {
-            const videoFrame = new VideoFrame(video);
-            videoFrame.close();
-
+        const texture = await initVideoTexture(device);
+        const render =  async() => {
             const view: GPUTextureView = context.getCurrentTexture().createView();
             const renderPassDescriptor: GPURenderPassDescriptor = {
                 label: 'our basic canvas renderPass',
@@ -137,14 +129,12 @@ export async function videoScript (device: GPUDevice, context: GPUCanvasContext,
             const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
             passEncoder.setPipeline(pipeline);
 
-            const texture = device.importExternalTexture({
-                source: video,
-            })
+            copySourceToTexture(device, texture, video);
             const bindGroup = device.createBindGroup({
                 layout: pipeline.getBindGroupLayout(0),
                 entries: [
                     { binding: 0, resource: sampler },
-                    { binding: 1, resource: texture },
+                    { binding: 1, resource: texture.createView() },
                 ],
             });
     

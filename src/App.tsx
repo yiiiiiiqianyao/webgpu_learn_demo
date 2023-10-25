@@ -6,7 +6,8 @@ import './App.css';
 // import { storageBufferScript } from './demos/storageBuffer';
 // import { vertexBufferScript } from './demos/vertexBuffer';
 // import { textureScript } from './demos/texture';
-import { videoScript } from './demos/video';
+// import { videoScript } from './demos/video';
+import { videoScript } from './demos/video2';
 
 function App() {
   useEffect(() => {

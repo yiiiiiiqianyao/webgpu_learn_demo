@@ -38,31 +38,12 @@ struct v2f {
     return textureSampleBaseClampToEdge(ourTexture, ourSampler, uv);
 }
 `
-
 const video = document.createElement('video');
 video.muted = true;
 video.loop = true;
 video.preload = 'auto';
 video.crossOrigin = 'none';
 video.src = 'https://gw.alipayobjects.com/v/huamei_uu41p1/afts/video/yzUYR5pOpwcAAAAAAAAAAAAAK4eUAQBr';
-
-function copySourceToTexture(device: GPUDevice, texture: GPUTexture, source: HTMLVideoElement) {
-    device.queue.copyExternalImageToTexture(
-      { source, flipY: true, },
-      { texture },
-      { width: video.videoWidth, height: video.videoHeight });
-  }
-
-export function initVideoTexture(device: GPUDevice) {
-    const texture = device.createTexture({
-        format: 'rgba8unorm',
-        // mipLevelCount: options.mips ? numMipLevels(source.width, source.height) : 1,
-        size: [video.videoWidth, video.videoHeight],
-        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-    copySourceToTexture(device, texture, video);
-    return texture;
-}
 
 // create a simple pipiline
 async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promise<GPURenderPipeline> {
@@ -89,15 +70,13 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promis
                     format: format // render target format has to specify
                 }
             ]
-        },
-        // multisample: {
-        //     count: 1, // 1 or 4
-        // }
+        }
     }
     const pipeline = await device.createRenderPipelineAsync(descriptor);
     return pipeline;
 }
 
+// Note: 将视频作为源，使用 WebGPU 对视频纹理的额外支持 device.importExternalTexture
 export async function videoScript (device: GPUDevice, context: GPUCanvasContext, format: GPUTextureFormat) {
     const pipeline = await initPipeline(device, format);
     
@@ -109,7 +88,6 @@ export async function videoScript (device: GPUDevice, context: GPUCanvasContext,
 
     setTimeout( async() => {
         console.log('load');
-        // const texture = await initVideoTexture(device);
         const render = () => {
             const videoFrame = new VideoFrame(video);
             videoFrame.close();
