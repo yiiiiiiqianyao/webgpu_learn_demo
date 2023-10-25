@@ -21,7 +21,7 @@ struct v2f {
 
   var vsOutput: v2f;
   let xy = pos[vertexIndex];
-  // 顶点坐标
+  // 顶点坐标 - 设置 vertex 的 gl_Position
   vsOutput.position = vec4f(pos[vertexIndex], 0.0, 1.0);
   // uv 坐标
   vsOutput.texCoord = pos[vertexIndex];
