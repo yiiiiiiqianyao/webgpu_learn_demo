@@ -108,6 +108,12 @@ const createTextureWithMips = (device: GPUDevice, mips: IMipData[], label: strin
         usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
     });
     // 写入 mip 数据
+        // device.queue.writeTexture(
+        //     { texture },
+        //     mips[0].data,
+        //     { bytesPerRow: mips[0].width * 4 },
+        //     { width: mips[0].width, height: mips[0].height },
+        // );
     mips.forEach(({data, width, height}, mipLevel: number) => {
         device.queue.writeTexture(
             { texture, mipLevel },
@@ -153,6 +159,7 @@ export async function mipmapDataScript (device: GPUDevice, canvas: HTMLCanvasEle
             minFilter: (i & 2) ? 'linear' : 'nearest',
 
             // 后四个 sampler linear
+            // mipmapFilter: 'linear', colors are sampled from 2 mip levels
             mipmapFilter: (i & 4) ? 'linear' : 'nearest',
         });
 
@@ -188,6 +195,7 @@ export async function mipmapDataScript (device: GPUDevice, canvas: HTMLCanvasEle
         });
     }
 
+    // 不同的 plane 有相同的 projectionMatrix 和 viewProjectionMatrix
     const fov = 60 * Math.PI / 180;  // 60 degrees in radians
     const aspect = canvas.clientWidth / canvas.clientHeight;
     const zNear  = 1;
@@ -213,7 +221,6 @@ export async function mipmapDataScript (device: GPUDevice, canvas: HTMLCanvasEle
     };
     const pass = encoder.beginRenderPass(renderPassDescriptor);
     pass.setPipeline(pipeline);
-    console.log('objectInfos', objectInfos);
     objectInfos.forEach(({bindGroups, matrix, uniformBuffer, uniformValues}, i) => {
         const bindGroup = bindGroups[texNdx];
         const xSpacing = 1.2;
@@ -222,6 +229,7 @@ export async function mipmapDataScript (device: GPUDevice, canvas: HTMLCanvasEle
         const x = i % 4 - 1.5;
         const y = i < 4 ? 1 : -1;
 
+        // 每个 plane 都有自己的 modelMatrix
         mat4.translate(viewProjectionMatrix, [x * xSpacing, y * ySpacing, -zDepth * 0.5], matrix);
         mat4.rotateX(matrix, 0.5 * Math.PI, matrix);
         mat4.scale(matrix, [1, zDepth * 2, 1], matrix);
