@@ -7,7 +7,8 @@ import './App.css';
 // import { vertexBufferScript } from './demos/vertexBuffer';
 // import { textureScript } from './demos/texture';
 // import { videoScript } from './demos/video';
-import { videoScript } from './demos/video2';
+// import { videoScript } from './demos/video2';
+import { mipmapDataScript } from './demos/mipmap_data';
 
 function App() {
   useEffect(() => {
@@ -34,7 +35,8 @@ function App() {
         // storageBufferScript(device, context, format, canvas);
         // computeScript(device);
         // textureScript(device, context, format);
-        videoScript(device, context, format);
+        mipmapDataScript(device, canvas, context, format);
+        // videoScript(device, context, format);
       }
       // render();
       
