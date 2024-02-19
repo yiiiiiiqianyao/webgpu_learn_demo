@@ -6,8 +6,9 @@ import './App.css';
 // import { storageBufferScript } from './demos/storageBuffer';
 // import { vertexBufferScript } from './demos/vertexBuffer';
 // import { textureScript } from './demos/textureDemos/canvasTexture';
-import { textureScript } from './demos/textureDemos/imageTexture';
+// import { textureScript } from './demos/textureDemos/imageTexture';
 // import { textureScript } from './demos/textureDemos/rawTexture';
+import { textureScript } from './demos/textureDemos/cubeTexture';
 // import { videoScript } from './demos/video';
 // import { videoScript } from './demos/video2';
 // import { mipmapDataScript } from './demos/mipmap_data';
@@ -29,14 +30,14 @@ function App() {
       context.configure({
         device, 
         format,
-        alphaMode: 'opaque',
+        alphaMode: 'premultiplied', // premultiplied opaque,
       })
 
       function render() {
         // vertexBufferScript(device, context, format, canvas);
         // storageBufferScript(device, context, format, canvas);
         // computeScript(device);
-        textureScript(device, context, format);
+        textureScript(device, context, format, canvas);
         // mipmapDataScript(device, canvas, context, format);
         // videoScript(device, context, format);
       }

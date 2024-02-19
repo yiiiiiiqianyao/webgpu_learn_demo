@@ -1,3 +1,5 @@
+import { copyVideoSourceToTexture, initVideoTexture } from "./utils/texture";
+
 const code = `
 struct v2f {
   @builtin(position) position: vec4f,
@@ -42,26 +44,6 @@ video.loop = true;
 video.preload = 'auto';
 video.crossOrigin = 'none';
 video.src = 'https://gw.alipayobjects.com/v/huamei_uu41p1/afts/video/yzUYR5pOpwcAAAAAAAAAAAAAK4eUAQBr';
-
-function copySourceToTexture(device: GPUDevice, texture: GPUTexture, source: HTMLVideoElement) {
-    device.queue.copyExternalImageToTexture(
-      { source, flipY: true, },
-      { texture },
-      { width: source.videoWidth, height: source.videoHeight }
-    );
-  }
-
-export function initVideoTexture(device: GPUDevice) {
-    const texture = device.createTexture({
-        format: 'rgba8unorm',
-        // mipLevelCount: options.mips ? numMipLevels(source.width, source.height) : 1,
-        size: [video.videoWidth, video.videoHeight],
-        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-    copySourceToTexture(device, texture, video);
-    return texture;
-}
-
 // create a simple pipiline
 async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promise<GPURenderPipeline> {
     const module = device.createShaderModule({
@@ -108,7 +90,7 @@ export async function videoScript (device: GPUDevice, context: GPUCanvasContext,
     video.play();
     // requestVideoFrameCallback canIuse 89% 2023/10/25
     video.requestVideoFrameCallback( async () => {
-        const texture = await initVideoTexture(device);
+        const texture = await initVideoTexture(device, video);
         const render =  async() => {
             const view: GPUTextureView = context.getCurrentTexture().createView();
             const renderPassDescriptor: GPURenderPassDescriptor = {
@@ -129,7 +111,7 @@ export async function videoScript (device: GPUDevice, context: GPUCanvasContext,
             passEncoder.setPipeline(pipeline);
     
             // 将 video 的视频帧数据 copy 到 texture 中去
-            copySourceToTexture(device, texture, video);
+            copyVideoSourceToTexture(device, texture, video);
 
             const bindGroup = device.createBindGroup({
                 layout: pipeline.getBindGroupLayout(0),

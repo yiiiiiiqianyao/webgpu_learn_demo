@@ -1,4 +1,4 @@
-import { loadImageBitmap } from "../utils/utils";
+import { loadImageBitmap } from "../utils/texture";
 
 const code = `
 struct v2f {
