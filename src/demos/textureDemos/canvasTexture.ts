@@ -1,5 +1,3 @@
-import { loadImageBitmap } from "./utils";
-
 const code = `
 struct v2f {
   @builtin(position) position: vec4f,
@@ -40,62 +38,6 @@ struct v2f {
     return textureSample(ourTexture, ourSampler, uv);
 }
 `
-
-// 根据数据构造纹理
-export function initRawTexture(device: GPUDevice) {
-    const kTextureWidth = 5;
-    const kTextureHeight = 7;
-    const _ = [255,   0,   0, 255];  // red
-    const y = [255, 255,   0, 255];  // yellow
-    const b = [  0,   0, 255, 255];  // blue
-    const textureData = new Uint8Array([
-      b, _, _, _, _,
-      _, y, y, y, _,
-      _, y, _, _, _,
-      _, y, y, _, _,
-      _, y, _, _, _,
-      _, y, _, _, _,
-      _, _, _, _, _,
-    ].flat());
-    const texture = device.createTexture({
-        label: 'yellow F on red',
-        size: [kTextureWidth, kTextureHeight],
-        format: 'rgba8unorm', // 8 位 4 通道的格式 unorm => ns unsigned normalized
-        // 在该种格式：若我们输入的是 [64, 128, 192, 255]，那么在 shader 中接收到的值为 [64 / 255, 128 / 255, 192 / 255, 255 / 255]
-        // 或者我们直接输入 0 - 1 之间的值，如 [0.25, 0.50, 0.75, 1.00]
-        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
-        // GPUTextureUsage.TEXTURE_BINDING 表示我们要把这个纹理对象绑定到一个绑定组
-      });
-    // 往 texture 对象中写入数据
-    device.queue.writeTexture({ texture },
-        textureData,
-        { 
-        bytesPerRow: kTextureWidth * 4, // 每行的字节数
-        },
-        { width: kTextureWidth, height: kTextureHeight },
-    );
-    return texture;
-}
-
-// 根据图片请求纹理
-export async function initImgTexture(device: GPUDevice) {
-    // texture img
-    const imgUrl = 'https://mdn.alipayobjects.com/huamei_uu41p1/afts/img/A*Eq-fQ5jQPYQAAAAAAAAAAAAADhyWAQ/original';
-    const source = await loadImageBitmap(imgUrl);
-    const texture = device.createTexture({
-        label: imgUrl,
-        format: 'rgba8unorm',
-        size: [source.width, source.height],
-        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-    // Note: copyExternalImageToTexture
-    // 在使用 copyExternalImageToTexture 往 texture 中写入数据的时候 需要设置 texture 的 usage 为 GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
-    device.queue.copyExternalImageToTexture(
-    { source, flipY: true },
-    { texture },
-    { width: source.width, height: source.height });
-    return texture;
-}
 
 const size = 256;
 const ctx = document.createElement('canvas').getContext('2d') as CanvasRenderingContext2D;
@@ -174,8 +116,6 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promis
 
 export async function textureScript (device: GPUDevice, context: GPUCanvasContext, format: GPUTextureFormat) {
     const pipeline = await initPipeline(device, format);
-
-    
      // 纹理采样器
      const sampler = device.createSampler({
         // addressModeU: 'repeat',
@@ -187,10 +127,7 @@ export async function textureScript (device: GPUDevice, context: GPUCanvasContex
         // minFilter
         // mipmapFilter
     });
-    // const texture = initRawTexture(device);
-    // const texture = await initImgTexture(device);
     const texture = await initCanvasTexture(device);
-
     const bindGroup = device.createBindGroup({
         layout: pipeline.getBindGroupLayout(0),
         entries: [

@@ -1,4 +1,4 @@
-import { rand } from "./mesh";
+import { rand } from "./utils/mesh";
 
 const wgslCode = `
 struct OurStruct {

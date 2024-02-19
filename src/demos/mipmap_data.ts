@@ -1,5 +1,5 @@
-import { mat4 } from './mat';
-import { generateMips } from './utils';
+import { mat4 } from './utils/mat';
+import { generateMips } from './utils/utils';
 interface IMipData {
     data: BufferSource | SharedArrayBuffer;
     width: number;

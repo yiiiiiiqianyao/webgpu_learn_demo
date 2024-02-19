@@ -5,10 +5,12 @@ import './App.css';
 // import { computeScript } from './demos/simpleCompute';
 // import { storageBufferScript } from './demos/storageBuffer';
 // import { vertexBufferScript } from './demos/vertexBuffer';
-// import { textureScript } from './demos/texture';
+// import { textureScript } from './demos/textureDemos/canvasTexture';
+import { textureScript } from './demos/textureDemos/imageTexture';
+// import { textureScript } from './demos/textureDemos/rawTexture';
 // import { videoScript } from './demos/video';
 // import { videoScript } from './demos/video2';
-import { mipmapDataScript } from './demos/mipmap_data';
+// import { mipmapDataScript } from './demos/mipmap_data';
 
 function App() {
   useEffect(() => {
@@ -34,8 +36,8 @@ function App() {
         // vertexBufferScript(device, context, format, canvas);
         // storageBufferScript(device, context, format, canvas);
         // computeScript(device);
-        // textureScript(device, context, format);
-        mipmapDataScript(device, canvas, context, format);
+        textureScript(device, context, format);
+        // mipmapDataScript(device, canvas, context, format);
         // videoScript(device, context, format);
       }
       // render();

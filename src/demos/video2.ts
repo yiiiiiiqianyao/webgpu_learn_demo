@@ -128,7 +128,9 @@ export async function videoScript (device: GPUDevice, context: GPUCanvasContext,
             const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
             passEncoder.setPipeline(pipeline);
     
+            // 将 video 的视频帧数据 copy 到 texture 中去
             copySourceToTexture(device, texture, video);
+
             const bindGroup = device.createBindGroup({
                 layout: pipeline.getBindGroupLayout(0),
                 entries: [

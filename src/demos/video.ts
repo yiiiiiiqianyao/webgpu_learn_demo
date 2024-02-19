@@ -110,6 +110,7 @@ export async function videoScript (device: GPUDevice, context: GPUCanvasContext,
             passEncoder.setPipeline(pipeline);
 
             // 可以考虑使用 requestVideoFrameCallback 获得视频实际的刷新帧率 优化视频的刷新
+            // 直接导入 video 的纹理
             const texture = device.importExternalTexture({
                 source: video,
             });
