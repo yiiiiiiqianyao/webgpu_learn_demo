@@ -1,4 +1,5 @@
 import { mat4 } from "../utils/mat4";
+import { degToRad } from "../utils/math";
 import { createCubeVertices } from "../utils/mesh";
 import { createTextureFromSource, loadImageBitmap } from "../utils/texture";
 
@@ -46,6 +47,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promis
             entryPoint: 'vs',
             buffers: [
                 {
+                    // 顶点数据三位（shader 中为四位，最后一位自动补全） uv 数据两位
                   arrayStride: (3 + 2) * 4, // (3+2) floats 4 bytes each
                   attributes: [
                     { shaderLocation: 0, offset: 0, format: 'float32x3' },  // position
@@ -92,21 +94,24 @@ export async function textureScript (device: GPUDevice, context: GPUCanvasContex
     const imgURL = 'https://mdn.alipayobjects.com/huamei_cwajh0/afts/img/A*veTHS4dEwGQAAAAAAAAAAAAADn19AQ/original';
     const imgBitmap = await loadImageBitmap(imgURL);
     const texture =  createTextureFromSource(device, imgBitmap, { mips: true, flipY: false });
-     
-    const uniformBufferSize = (16) * 4;
+    // const texture =  createTextureFromSource(device, imgBitmap, { mips: false, flipY: false });
+    //  shader 中传入一个 matrix uniform 的变量
+    const matrixBytes = 16;
+    const unifromBytes = matrixBytes;
+    const uniformBufferSize = unifromBytes * 4;
     const uniformBuffer = device.createBuffer({
       label: 'uniforms',
       size: uniformBufferSize,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
   
-    const uniformValues = new Float32Array(uniformBufferSize / 4);
+    const uniformValues = new Float32Array(unifromBytes);
   
-    // offsets to the various uniform values in float32 indices
+    // offsets to the various matrix uniform values in float32 indices
     const kMatrixOffset = 0;
+    const matrixValue = uniformValues.subarray(kMatrixOffset, kMatrixOffset + matrixBytes);
   
-    const matrixValue = uniformValues.subarray(kMatrixOffset, kMatrixOffset + 16);
-  
+    // init attribtue
     const { vertexData, indexData, numVertices } = createCubeVertices();
     const vertexBuffer = device.createBuffer({
       label: 'vertex buffer vertices',
@@ -122,6 +127,7 @@ export async function textureScript (device: GPUDevice, context: GPUCanvasContex
     });
     device.queue.writeBuffer(indexBuffer, 0, indexData);
   
+    // bind uniform buffer
     const bindGroup = device.createBindGroup({
       label: 'bind group for object',
       layout: pipeline.getBindGroupLayout(0),
@@ -149,13 +155,24 @@ export async function textureScript (device: GPUDevice, context: GPUCanvasContex
         },
     };
 
-    const degToRad = (d: number) => d * Math.PI / 180;
 
+    let depthTexture: GPUTexture;
+    // init cube rotation
     const settings = {
         rotation: [degToRad(20), degToRad(25), degToRad(0)],
     };
-
-    let depthTexture: GPUTexture;
+    // init view matrix & proj matrix
+    const view = mat4.lookAt(
+        [0, 1, 5],  // camera position
+        [0, 0, 0],  // target
+        [0, 1, 0],  // up
+    );
+    const proj =  mat4.perspective(
+        60 * Math.PI / 180,
+        canvas.clientWidth / canvas.clientHeight, // aspect
+        0.1,    // zNear
+        10,     // zFar
+    )
     function render() {
         // Get the current texture from the canvas context and
         // set it as the texture to render to.
@@ -165,54 +182,53 @@ export async function textureScript (device: GPUDevice, context: GPUCanvasContex
 
         // If we don't have a depth texture OR if its size is different
         // from the canvasTexture when make a new depth texture
-        if (!depthTexture ||
-            depthTexture.width !== canvasTexture.width ||
-            depthTexture.height !== canvasTexture.height) {
-        if (depthTexture) {
-            depthTexture.destroy();
-        }
-        depthTexture = device.createTexture({
-            size: [canvasTexture.width, canvasTexture.height],
-            format: 'depth24plus',
-            usage: GPUTextureUsage.RENDER_ATTACHMENT,
-        });
+        if (!depthTexture || depthTexture.width !== canvasTexture.width || depthTexture.height !== canvasTexture.height) {
+            if (depthTexture) {
+                depthTexture.destroy();
+            }
+            depthTexture = device.createTexture({
+                size: [canvasTexture.width, canvasTexture.height],
+                format: 'depth24plus',
+                usage: GPUTextureUsage.RENDER_ATTACHMENT,
+            });
         }
         // @ts-ignore
         renderPassDescriptor.depthStencilAttachment.view = depthTexture.createView();
 
+        // ** draw cube encoder **
         const encoder = device.createCommandEncoder();
         // @ts-ignore
         const pass = encoder.beginRenderPass(renderPassDescriptor);
         pass.setPipeline(pipeline);
+
+        // *** set attribute data start ***
         pass.setVertexBuffer(0, vertexBuffer);
         pass.setIndexBuffer(indexBuffer, 'uint16');
+        // *** set attribute data end ***
+        
+        // *** set unifrom data start ***
+        const matrix = mat4.multiply(proj as any, view as any);
+        mat4.rotateX(matrix, settings.rotation[0], matrix);
+        mat4.rotateY(matrix, settings.rotation[1], matrix);
+        mat4.rotateZ(matrix, settings.rotation[2], matrix);
+        mat4.copy(matrixValue, matrix);
 
-        const aspect = canvas.clientWidth / canvas.clientHeight;
-        mat4.perspective(
-            60 * Math.PI / 180,
-            aspect,
-            0.1,      // zNear
-            10,      // zFar
-            matrixValue,
-        );
-        const view = mat4.lookAt(
-        [0, 1, 5],  // camera position
-        [0, 0, 0],  // target
-        [0, 1, 0],  // up
-        );
-        // @ts-ignore
-        mat4.multiply(matrixValue, view, matrixValue);
-        mat4.rotateX(matrixValue, settings.rotation[0], matrixValue);
-        mat4.rotateY(matrixValue, settings.rotation[1], matrixValue);
-        mat4.rotateZ(matrixValue, settings.rotation[2], matrixValue);
+        // update x、y axis rotate
+        settings.rotation[0] += 0.01;
+        settings.rotation[1] += 0.01;
 
         // upload the uniform values to the uniform buffer
         device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
         pass.setBindGroup(0, bindGroup);
-        pass.drawIndexed(numVertices);
-        pass.end();
+        // *** set unifrom data end ***
 
+        // *** set indexBuffer start
+        pass.drawIndexed(numVertices);
+        // *** set indexBuffer end
+        pass.end();
         const commandBuffer = encoder.finish();
+        // ** draw cube encoder **
+        
         device.queue.submit([commandBuffer]);
         requestAnimationFrame(render);
     }

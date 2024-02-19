@@ -6,7 +6,7 @@ export const mat4 = {
       return mat4.ortho(0, width, height, 0, depth, -depth, dst);
     },
   
-    perspective(fieldOfViewYInRadians: number, aspect: number, zNear: number, zFar: number, dst: Float32Array | number[]) {
+    perspective(fieldOfViewYInRadians: number, aspect: number, zNear: number, zFar: number, dst?: Float32Array | number[]) {
       dst = dst || new Float32Array(16);
   
       const f = Math.tan(Math.PI * 0.5 - 0.5 * fieldOfViewYInRadians);
@@ -70,7 +70,7 @@ export const mat4 = {
       return dst;
     },
   
-    multiply(a: any[], b: any[], dst: Float32Array | number[]) {
+    multiply(a: any[], b: any[], dst?: Float32Array | number[]) {
       dst = dst || new Float32Array(16);
       const b00 = b[0 * 4 + 0];
       const b01 = b[0 * 4 + 1];
@@ -307,4 +307,10 @@ export const mat4 = {
     scale(m: any, scale: [any, any, any], dst: any) {
       return mat4.multiply(m, mat4.scaling(scale) as any[], dst);
     },
+
+    copy(a: number[] | Float32Array, b: number[] | Float32Array) {
+      for(let i = 0; i < 16;i++) {
+          a[i] = b[i];
+      }
+    }
   };
