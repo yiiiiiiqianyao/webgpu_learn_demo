@@ -24,13 +24,13 @@ export async function loadImageBitmap(url: string) {
     return await createImageBitmap(blob, { colorSpaceConversion: 'none' });
 }
 
-export function createTextureFromSource(device: GPUDevice, source: ImageBitmap, options = {mips: true, flipY: true}) {
+export function createTextureFromSource(device: GPUDevice, source: ImageBitmap, format: GPUTextureFormat, options = {mips: true, flipY: true}) {
     const numMipLevels = (...sizes: any[]) => {
         const maxSize = Math.max(...sizes);
         return 1 + Math.log2(maxSize) | 0;
     };
     const texture = device.createTexture({
-      format: 'rgba8unorm',
+      format,
       mipLevelCount: options.mips ? numMipLevels(source.width, source.height) : 1,
       size: [source.width, source.height],
       usage: GPUTextureUsage.TEXTURE_BINDING |

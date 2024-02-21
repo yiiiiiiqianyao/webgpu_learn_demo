@@ -93,8 +93,8 @@ export async function textureScript (device: GPUDevice, context: GPUCanvasContex
 
     const imgURL = 'https://mdn.alipayobjects.com/huamei_cwajh0/afts/img/A*veTHS4dEwGQAAAAAAAAAAAAADn19AQ/original';
     const imgBitmap = await loadImageBitmap(imgURL);
-    const texture =  createTextureFromSource(device, imgBitmap, { mips: true, flipY: false });
-    // const texture =  createTextureFromSource(device, imgBitmap, { mips: false, flipY: false });
+    const texture =  createTextureFromSource(device, imgBitmap, format, { mips: true, flipY: false });
+    // const texture =  createTextureFromSource(device, imgBitmap, format, { mips: false, flipY: false });
     //  shader 中传入一个 matrix uniform 的变量
     const matrixBytes = 16;
     const unifromBytes = matrixBytes;
@@ -141,17 +141,17 @@ export async function textureScript (device: GPUDevice, context: GPUCanvasContex
     const renderPassDescriptor = {
         label: 'our basic canvas renderPass',
         colorAttachments: [
-        {
-            // view: <- to be filled out when we render
-            loadOp: 'clear',
-            storeOp: 'store',
-        },
+            {
+                // view: <- to be filled out when we render
+                loadOp: 'clear',
+                storeOp: 'store',
+            },
         ],
         depthStencilAttachment: {
-        // view: <- to be filled out when we render
-        depthClearValue: 1.0,
-        depthLoadOp: 'clear',
-        depthStoreOp: 'store',
+            // view: <- to be filled out when we render
+            depthClearValue: 1.0,
+            depthLoadOp: 'clear',
+            depthStoreOp: 'store',
         },
     };
 
@@ -186,6 +186,7 @@ export async function textureScript (device: GPUDevice, context: GPUCanvasContex
             if (depthTexture) {
                 depthTexture.destroy();
             }
+            // 深度纹理需要自己进行创建
             depthTexture = device.createTexture({
                 size: [canvasTexture.width, canvasTexture.height],
                 format: 'depth24plus',
