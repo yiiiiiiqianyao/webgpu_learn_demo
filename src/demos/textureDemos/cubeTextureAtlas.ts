@@ -1,6 +1,6 @@
 import { mat4 } from "../utils/mat4";
 import { degToRad } from "../utils/math";
-import { createCubeVertices } from "../utils/mesh";
+import { createCubeVerticesUV } from "../utils/mesh";
 import { createTextureFromSource, loadImageBitmap } from "../utils/texture";
 
 const cubeCode = `
@@ -112,7 +112,7 @@ export async function textureScript (device: GPUDevice, context: GPUCanvasContex
     const matrixValue = uniformValues.subarray(kMatrixOffset, kMatrixOffset + matrixBytes);
   
     // init attribtue
-    const { vertexData, indexData, numVertices } = createCubeVertices();
+    const { vertexData, indexData, numVertices } = createCubeVerticesUV();
     const vertexBuffer = device.createBuffer({
       label: 'vertex buffer vertices',
       size: vertexData.byteLength,
