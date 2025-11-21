@@ -1,5 +1,5 @@
 {
-  "name": "webgpudemo",
+  "name": "webgpu_learn_demo",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
