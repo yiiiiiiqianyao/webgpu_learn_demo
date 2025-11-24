@@ -125,125 +125,125 @@ const createTextureWithMips = (device: GPUDevice, mips: IMipData[], label: strin
     return texture;
 };
 
-export async function mipmapDataScript (device: GPUDevice, canvas: HTMLCanvasElement, context: GPUCanvasContext, format: GPUTextureFormat) {
-    const module = device.createShaderModule({ code });
-    const pipeline = device.createRenderPipeline({
-        label: 'hardcoded textured quad pipeline',
-        layout: 'auto',
-        vertex: {
-          module,
-          entryPoint: 'vs',
-        },
-        fragment: {
-          module,
-          entryPoint: 'fs',
-          targets: [{ format }],
-        },
-    });
+// export async function mipmapDataScript (device: GPUDevice, canvas: HTMLCanvasElement, context: GPUCanvasContext, format: GPUTextureFormat) {
+//     const module = device.createShaderModule({ code });
+//     const pipeline = device.createRenderPipeline({
+//         label: 'hardcoded textured quad pipeline',
+//         layout: 'auto',
+//         vertex: {
+//           module,
+//           entryPoint: 'vs',
+//         },
+//         fragment: {
+//           module,
+//           entryPoint: 'fs',
+//           targets: [{ format }],
+//         },
+//     });
 
-    const textures = [
-        createTextureWithMips(device, createCheckedMipmap(), 'checker'),
-        createTextureWithMips(device, createBlendedMipmap(), 'blended'),
-    ];
+//     const textures = [
+//         createTextureWithMips(device, createCheckedMipmap(), 'checker'),
+//         createTextureWithMips(device, createBlendedMipmap(), 'blended'),
+//     ];
 
-    // offsets to the various uniform values in float32 indices
-    const kMatrixOffset = 0;
-    let texNdx = 0;
+//     // offsets to the various uniform values in float32 indices
+//     const kMatrixOffset = 0;
+//     let texNdx = 0;
     
-    const objectInfos: any[] = [];
-    for (let i = 0; i < 8; ++i) {
-        const sampler = device.createSampler({
-            addressModeU: 'repeat',
-            addressModeV: 'repeat',
-            magFilter: (i & 1) ? 'linear' : 'nearest',
-            minFilter: (i & 2) ? 'linear' : 'nearest',
+//     const objectInfos: any[] = [];
+//     for (let i = 0; i < 8; ++i) {
+//         const sampler = device.createSampler({
+//             addressModeU: 'repeat',
+//             addressModeV: 'repeat',
+//             magFilter: (i & 1) ? 'linear' : 'nearest',
+//             minFilter: (i & 2) ? 'linear' : 'nearest',
 
-            // 后四个 sampler linear
-            // mipmapFilter: 'linear', colors are sampled from 2 mip levels
-            mipmapFilter: (i & 4) ? 'linear' : 'nearest',
-        });
+//             // 后四个 sampler linear
+//             // mipmapFilter: 'linear', colors are sampled from 2 mip levels
+//             mipmapFilter: (i & 4) ? 'linear' : 'nearest',
+//         });
 
-        // create a buffer for the uniform values
-        const uniformBufferSize = 16 * 4; // matrix is 16 32bit floats (4bytes each)
-        const uniformBuffer = device.createBuffer({
-            label: 'uniforms for quad',
-            size: uniformBufferSize,
-            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        });
+//         // create a buffer for the uniform values
+//         const uniformBufferSize = 16 * 4; // matrix is 16 32bit floats (4bytes each)
+//         const uniformBuffer = device.createBuffer({
+//             label: 'uniforms for quad',
+//             size: uniformBufferSize,
+//             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+//         });
 
-        // create a typedarray to hold the values for the uniforms in JavaScript
-        const uniformValues = new Float32Array(uniformBufferSize / 4);
-        const matrix = uniformValues.subarray(kMatrixOffset, 16);
+//         // create a typedarray to hold the values for the uniforms in JavaScript
+//         const uniformValues = new Float32Array(uniformBufferSize / 4);
+//         const matrix = uniformValues.subarray(kMatrixOffset, 16);
 
-        // 构造两个绑定组
-        const bindGroups = textures.map(texture =>
-            device.createBindGroup({
-            layout: pipeline.getBindGroupLayout(0),
-            entries: [
-                { binding: 0, resource: sampler },
-                { binding: 1, resource: texture.createView() },
-                { binding: 2, resource: { buffer: uniformBuffer }},
-            ],
-        }));
+//         // 构造两个绑定组
+//         const bindGroups = textures.map(texture =>
+//             device.createBindGroup({
+//             layout: pipeline.getBindGroupLayout(0),
+//             entries: [
+//                 { binding: 0, resource: sampler },
+//                 { binding: 1, resource: texture.createView() },
+//                 { binding: 2, resource: { buffer: uniformBuffer }},
+//             ],
+//         }));
 
-        // Save the data we need to render this object.
-        objectInfos.push({
-            bindGroups,
-            matrix,
-            uniformValues,
-            uniformBuffer,
-        });
-    }
+//         // Save the data we need to render this object.
+//         objectInfos.push({
+//             bindGroups,
+//             matrix,
+//             uniformValues,
+//             uniformBuffer,
+//         });
+//     }
 
-    // 不同的 plane 有相同的 projectionMatrix 和 viewProjectionMatrix
-    const fov = 60 * Math.PI / 180;  // 60 degrees in radians
-    const aspect = canvas.clientWidth / canvas.clientHeight;
-    const zNear  = 1;
-    const zFar   = 2000;
-    const projectionMatrix = mat4.perspective(fov, aspect, zNear, zFar);
+//     // 不同的 plane 有相同的 projectionMatrix 和 viewProjectionMatrix
+//     const fov = 60 * Math.PI / 180;  // 60 degrees in radians
+//     const aspect = canvas.clientWidth / canvas.clientHeight;
+//     const zNear  = 1;
+//     const zFar   = 2000;
+//     const projectionMatrix = mat4.perspective(fov, aspect, zNear, zFar);
 
-    const cameraPosition = [0, 0, 2];
-    const up = [0, 1, 0];
-    const target = [0, 0, 0];
-    const viewMatrix = mat4.lookAt(cameraPosition, target, up);
-    const viewProjectionMatrix = mat4.multiply(projectionMatrix, viewMatrix);
+//     const cameraPosition = [0, 0, 2];
+//     const up = [0, 1, 0];
+//     const target = [0, 0, 0];
+//     const viewMatrix = mat4.lookAt(cameraPosition, target, up);
+//     const viewProjectionMatrix = mat4.multiply(projectionMatrix, viewMatrix);
 
-    const encoder = device.createCommandEncoder();
-    const renderPassDescriptor: GPURenderPassDescriptor = {
-        colorAttachments: [
-            {
-                clearValue: [0.3, 0.3, 0.3, 1],
-                loadOp: 'clear',
-                storeOp: 'store',
-                view: context.getCurrentTexture().createView(), // render to default canvas
-            },
-        ],
-    };
-    const pass = encoder.beginRenderPass(renderPassDescriptor);
-    pass.setPipeline(pipeline);
-    objectInfos.forEach(({bindGroups, matrix, uniformBuffer, uniformValues}, i) => {
-        const bindGroup = bindGroups[texNdx];
-        const xSpacing = 1.2;
-        const ySpacing = 0.7;
-        const zDepth = 50;
-        const x = i % 4 - 1.5;
-        const y = i < 4 ? 1 : -1;
+//     const encoder = device.createCommandEncoder();
+//     const renderPassDescriptor: GPURenderPassDescriptor = {
+//         colorAttachments: [
+//             {
+//                 clearValue: [0.3, 0.3, 0.3, 1],
+//                 loadOp: 'clear',
+//                 storeOp: 'store',
+//                 view: context.getCurrentTexture().createView(), // render to default canvas
+//             },
+//         ],
+//     };
+//     const pass = encoder.beginRenderPass(renderPassDescriptor);
+//     pass.setPipeline(pipeline);
+//     objectInfos.forEach(({bindGroups, matrix, uniformBuffer, uniformValues}, i) => {
+//         const bindGroup = bindGroups[texNdx];
+//         const xSpacing = 1.2;
+//         const ySpacing = 0.7;
+//         const zDepth = 50;
+//         const x = i % 4 - 1.5;
+//         const y = i < 4 ? 1 : -1;
 
-        // 每个 plane 都有自己的 modelMatrix
-        mat4.translate(viewProjectionMatrix, [x * xSpacing, y * ySpacing, -zDepth * 0.5], matrix);
-        mat4.rotateX(matrix, 0.5 * Math.PI, matrix);
-        mat4.scale(matrix, [1, zDepth * 2, 1], matrix);
-        mat4.translate(matrix, [-0.5, -0.5, 0], matrix);
+//         // 每个 plane 都有自己的 modelMatrix
+//         mat4.translate(viewProjectionMatrix, [x * xSpacing, y * ySpacing, -zDepth * 0.5], matrix);
+//         mat4.rotateX(matrix, 0.5 * Math.PI, matrix);
+//         mat4.scale(matrix, [1, zDepth * 2, 1], matrix);
+//         mat4.translate(matrix, [-0.5, -0.5, 0], matrix);
 
-        // copy the values from JavaScript to the GPU
-        device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
+//         // copy the values from JavaScript to the GPU
+//         device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
 
-        pass.setBindGroup(0, bindGroup);
-        pass.draw(6);  // call our vertex shader 6 times
-    });
+//         pass.setBindGroup(0, bindGroup);
+//         pass.draw(6);  // call our vertex shader 6 times
+//     });
 
-    pass.end();
+//     pass.end();
 
-    const commandBuffer = encoder.finish();
-    device.queue.submit([commandBuffer]);
-}
+//     const commandBuffer = encoder.finish();
+//     device.queue.submit([commandBuffer]);
+// }
