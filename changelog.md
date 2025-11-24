@@ -1,2 +1,2 @@
 - restart learn webgpu 2025-11-21
-- upgrade dependencies 2025-11-24
+- upgrade dependencies & dispose scene code optimize 2025-11-24
